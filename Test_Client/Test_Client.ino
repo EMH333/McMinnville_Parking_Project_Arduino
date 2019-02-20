@@ -16,6 +16,9 @@ RH_RF95 rf95(8, 3); // Adafruit Feather M0 with RFM95
 
 // Must match RX's freq!
 #define RF95_FREQ 915.0
+#define SENSOR_ONE_PIN 14//TBD
+#define SENSOR_TWO_PIN 15//TBD
+
 
 void setup() 
 {
@@ -24,7 +27,7 @@ void setup()
 //  pinMode(4, OUTPUT);
 //  digitalWrite(4, HIGH);
   Serial.begin(9600);
-  while (!Serial) ; // Wait for serial port to be available
+  //while (!Serial) ; // Wait for serial port to be available
   if (!rf95.init())
     Serial.println("init failed");
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
@@ -38,39 +41,43 @@ void setup()
     while (1);
   }
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+
+
+  pinMode(SENSOR_ONE_PIN, INPUT);//Init
+  pinMode(SENSOR_TWO_PIN, INPUT);
 }
 
 
+unsigned int readDistanceOne() {
+  /*unsigned long duration = pulseIn(SENSOR_ONE_PIN, PULSE_TYPE, PULSE_TIMEOUT);
+    unsigned int distance = duration / MICRO_PER_CM;
+    if(distance < 20){//less than 20 cm then return 0
+    return 0;
+    }else{
+    return distance;
+    }*/
+  int raw = analogRead(SENSOR_ONE_PIN);//3.2mv per cm
+  int voltage = map(raw, 0, 1023, 0, 3300);
+  return (unsigned int) voltage / 3.2;
+}
+
+unsigned int readDistanceTwo() {
+  int raw = analogRead(SENSOR_TWO_PIN);//3.2mv per cm
+  int voltage = map(raw, 0, 1023, 0, 3300);
+  return (unsigned int) voltage / 3.2;
+}
+
 void loop()
 {
-  Serial.println("Sending to rf95_server");
+  //Serial.println("Sending to rf95_server");
   // Send a message to rf95_server
-  uint8_t data[] = "Hello World!";
-  rf95.send(data, sizeof(data));
-  
+  //uint8_t data[] = "Hello World!";
+  int dOne = readDistanceOne();
+  int dTwo = readDistanceTwo();
+  const int leng = 4;
+  uint8_t packet[leng] = {dOne/100,dOne%100, dTwo/100,dTwo%100};
+  rf95.send(packet, leng);
   rf95.waitPacketSent();
-  // Now wait for a reply
-  uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-  if (rf95.waitAvailableTimeout(3000))
-  { 
-    // Should be a reply message for us now   
-    if (rf95.recv(buf, &len))
-   {
-      Serial.print("got reply: ");
-      Serial.println((char*)buf);
-      Serial.print("RSSI: ");
-      Serial.println(rf95.lastRssi(), DEC);    
-    }
-    else
-    {
-      Serial.println("recv failed");
-    }
-  }
-  else
-  {
-    Serial.println("No reply, is rf95_server running?");
-  }
-  delay(400);
+
 }
 

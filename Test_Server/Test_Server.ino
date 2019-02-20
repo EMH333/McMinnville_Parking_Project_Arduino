@@ -31,7 +31,7 @@ void setup()
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 }
 
-
+long previousTime = 0;
 void loop()
 {
   if (rf95.available())
@@ -43,7 +43,15 @@ void loop()
     {
       //digitalWrite(led, HIGH);
 //      Serial.print("got request: ");
-      Serial.println((char*)buf);
+      Serial.print(",");
+      Serial.print(buf[0]);
+      Serial.print(buf[1]);
+      Serial.print(",");
+      Serial.print(buf[2]);
+      Serial.print(buf[3]);
+      Serial.print(",");
+      Serial.println(millis()-previousTime);
+      previousTime = millis();
 //      Serial.print("RSSI: ");
 //      Serial.println(rf95.lastRssi(), DEC);
       
