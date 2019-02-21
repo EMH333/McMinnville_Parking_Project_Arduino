@@ -1,4 +1,5 @@
 #include <iostream>
+#include "libraries/Average.h"
 #include "exampleReadCSV.cpp"
 #include "carFunction.cpp"
 #include <cmath>
@@ -12,6 +13,9 @@ int main(int, char **)
 }
 
 //just use datafile to test
+//TODO add time management
+int currentTime = 0;
+const int INCREASE = 30;//about 30 miliseconds every time
 bool test(string dataFile)
 {
     vector<vector<int>> vec = readData(dataFile);
@@ -21,7 +25,8 @@ bool test(string dataFile)
 
     for (unsigned int i = 1; i < vec.size(); ++i)
     {
-        if (hasCarPassed(vec[i][0], vec[i][1]))
+        currentTime += INCREASE;
+        if (hasCarPassed(vec[i][0], vec[i][1], currentTime))
         {
             cars++;
         }

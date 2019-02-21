@@ -1,33 +1,6 @@
-const int DATA_SIZE = 100;
-int floorVal = 500; //the value of where the floor is (will be subsitubed for average)
-int aData[DATA_SIZE];
-int counter = 0;
-int average = floorVal; //start with average at floor val to compinstate
-bool firstRound = true;
-int addData(int val)
-{
-    aData[counter] = val;
-    counter++;
-    if (counter >= DATA_SIZE)
-    {
-        firstRound = false;
-        counter = 0;
-    }
-
-    int sum = 0;
-    for (int i = 0; i < DATA_SIZE; i++)
-    {
-        sum += aData[i];
-    }
-
-    average = sum / DATA_SIZE;
-    if(firstRound){
-        average = sum / counter;
-    }
-    //cout << "sum: " << sum << ", AVERAGE: " << average << endl;
-    return average;
-}
-
+#include <iostream>
+#include "libraries/Average.h"
+#include "libraries/Average.cpp"
 //
 //
 //
@@ -36,34 +9,40 @@ int addData(int val)
 //
 //the function used to actually do the detection
 
-int minDiff = 150;  //minimum difference to trigger system
+#define MAX_CHANGE 250
+#define MIN_CHANGE 140
+#define MIN_TIME 750
+int previousDistance = 0;
 bool carPassing = false;
-int previous = average;
-bool hasCarPassed(int dOne, int dTwo)
+long carPassingTime = 0;
+Average floorAverage(1500);
+Average past(4);
+bool hasCarPassed(int dOne, int dTwo, int currentTime)
 {
-    if(dOne >= average){
-        addData(dOne);
-        carPassing = false;
-        return false;
+    int currentDistance = dOne;
+    past.addData(currentDistance);
+    //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage()<< std::endl;
+    if(carPassingTime == 0){
+        floorAverage.addData(currentDistance);
     }
-    if ((dOne < average - minDiff) || (previous < average - minDiff))
+    bool passedCurrently = past.getAverage() < floorAverage.getAverage() - MIN_CHANGE;
+
+    if (passedCurrently && !carPassing)
     {
-        previous = dOne;
-        if (!carPassing)
-        {
-            carPassing = true;
-            cout << "Detected car with distance: " << dOne << ", Average: " << average << endl;
-            return true;
-        }else{
-            addData(dOne);
-            return false;
-        }
-    }else{
-        previous = dOne;
-        carPassing = false;
-        addData(dOne);
-        return false;
+        std::cout << "Current Time: " << currentTime << ", floor: " << floorAverage.getAverage() << ", past: " << past.getAverage() << std::endl;
+
+        carPassing = true;
+        carPassingTime = currentTime;
+        return true;
     }
+    else
+    {
+        if (carPassingTime + MIN_TIME < currentTime)
+        {
+            carPassing = false;
+            previousDistance = currentDistance;
+            floorAverage.addData(currentDistance); //add current distance to average
+        }
+    }
+    return false;
 }
-
-

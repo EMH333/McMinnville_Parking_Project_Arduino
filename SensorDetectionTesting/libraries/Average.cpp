@@ -1,13 +1,17 @@
-#include "runningAverage.h"
+#include "Average.h"
 
-
-Average::Average(int size) {
+Average::Average(int size)
+{
   numReadings = size;
-  hasLooped = false;
   data.resize(numReadings);
+  for (int i = 0; i < numReadings; i++)
+  {
+    data[i] = 0;
+  }
 }
 
-void Average::addData(int input) {
+void Average::addData(int input)
+{
   // subtract the last reading:
   total = total - data[readIndex];
   // read from the sensor:
@@ -15,27 +19,34 @@ void Average::addData(int input) {
   // add the reading to the total:
   total = total + data[readIndex];
   // advance to the next position in the array:
-  readIndex = readIndex + 1;
+  readIndex++;
 
   // if we're at the end of the array...
-  if (readIndex >= numReadings) {
+  if (readIndex >= numReadings)
+  {
     // ...wrap around to the beginning:
     readIndex = 0;
-  }
-
-  if (readIndex > numReadings - 1) {
     hasLooped = true;
   }
 }
 
-int Average::getAverage() {
-  if (hasLooped) {
+int Average::getAverage()
+{
+  if (hasLooped)
+  {
     average = total / numReadings;
-  } else {
-    average = total / readIndex;
+  }
+  else
+  {
+    if (readIndex != 0)
+    {
+      average = total / readIndex;
+    }
+    else
+    {
+      average = 1;
+    }
   }
 
   return average;
 }
-
-
