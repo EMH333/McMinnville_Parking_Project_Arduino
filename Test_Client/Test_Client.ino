@@ -75,7 +75,7 @@ void loop()
   int dOne = readDistanceOne();
   int dTwo = readDistanceTwo();
   const int leng = 4;
-  uint8_t packet[leng] = {dOne/100,dOne%100, dTwo/100,dTwo%100};
+  uint8_t packet[leng] = {dOne/10,dOne%10, dTwo/10,dTwo%10};
   rf95.send(packet, leng);
   rf95.waitPacketSent();
 
