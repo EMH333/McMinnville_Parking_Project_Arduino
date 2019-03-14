@@ -15,6 +15,10 @@ int main(int, char **)
     test("testFiles/Mon/one-2.txt");
     test("testFiles/Mon/two-2.txt");
     test("testFiles/Mon/one_good.txt");
+
+    //ify tests
+    test("testFiles/Thur/two-1-d2.txt");
+    test("testFiles/Thur/two-2-d1-good.txt");
 }
 
 //just use datafile to test

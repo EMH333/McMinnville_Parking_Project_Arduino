@@ -14,6 +14,8 @@
 #define MIN_TIME_TO_PASS 750
 #define MIN_TIME_BETWEEN_CARS 200
 #define MAX_SENSOR_ERROR 20 //the max error before we default to sensor one
+#define SENSOR_ERROR_DISTANCE 255
+#define SENSOR_ERROR_TOLERANCE 5 //how far around sensor error distance where we think sensor is broken
 class carFunction
 {
   private:
@@ -42,17 +44,39 @@ bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
     int currentDistance;
     if (abs(dOne - dTwo) < MAX_SENSOR_ERROR)
     {
-        currentDistance = (dOne + dTwo) / 2; //use current distance as an average
+        currentDistance = (dOne + dTwo) / 2; //if close use current distance as an average
     }
     else
-    { //by default
-        currentDistance = dOne;
+    {   //by default pick the sensor reading that isn't close to 255 and is the highest not above 500 (15 feet which we should never reach)
+        //and not lower than 30 (should never reach)
+        if (dOne > dTwo)
+        {
+            if (dOne > SENSOR_ERROR_DISTANCE + SENSOR_ERROR_TOLERANCE && dOne < SENSOR_ERROR_DISTANCE - SENSOR_ERROR_TOLERANCE && dOne < 500 && dOne > 30)
+            {
+                currentDistance = dOne;
+            }
+            else
+            {
+                currentDistance = dTwo; //TODO currently accepting this blindly, might need to modify
+            }
+        }
+        else
+        {
+            if (dTwo > SENSOR_ERROR_DISTANCE + SENSOR_ERROR_TOLERANCE && dTwo < SENSOR_ERROR_DISTANCE - SENSOR_ERROR_TOLERANCE && dTwo < 500 && dTwo > 30)
+            {
+                currentDistance = dTwo;
+            }
+            else
+            {
+                currentDistance = dOne; //TODO currently accepting this blindly, might need to modify
+            }
+        }
     }
 
     updateDirection(dOne, dTwo, currentTime);
 
     past.addData(currentDistance);
-    //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage() 
+    //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage()
     //<< ", difference: " << floorAverage.getAverage() - past.getAverage() << std::endl;
     if (carPassingTime == 0)
     {
@@ -66,7 +90,7 @@ bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
     if (passedCurrently && !carPassing && currentTime > carPassingTime + MIN_TIME_BETWEEN_CARS)
     {
         std::cout << "Current Time: " << currentTime << ", floor: " << floorAverage.getAverage()
-                  << ", past average: " << past.getAverage() 
+                  << ", past average: " << past.getAverage()
                   << ", difference: " << floorAverage.getAverage() - past.getAverage()
                   << ", direction: " << getDirection(currentTime, 100) << std::endl;
 
