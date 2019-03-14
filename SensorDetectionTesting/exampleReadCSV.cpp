@@ -38,11 +38,20 @@ vector<vector<int>> readData(string file)
         {
             // add all the column data
             // of a row to a vector
-            row.push_back(stoi(word));
+            try
+            {
+                row.push_back(stoi(word));
+            }
+            catch(const std::exception& e)
+            {
+                std::cout <<"Error parsing: " <<word << "." <<endl;
+                //std::cerr << e.what() << '\n';
+            }
+            
         }
         table.push_back(row);
     }
 
-    std::cout << "Done loading values" << endl;
+    std::cout << "Done loading values, rows:"<< table.size() << endl;
     return table;
 }
