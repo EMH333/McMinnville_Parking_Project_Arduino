@@ -124,6 +124,7 @@ bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
     return false;
 }
 
+//TODO add a confidence level
 void carFunction::updateDirection(int dOne, int dTwo, int currentTime)
 {
     //there are a few ways to do this
