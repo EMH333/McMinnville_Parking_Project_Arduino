@@ -111,12 +111,13 @@ void oldLoop() {
 }
 
 
+//PID number 1 for sending car data
 bool sendCarData(CarInformation car){
   const uint8_t PACKET_LENGTH = 7;
-  uint8_t packet[PACKET_LENGTH] = {1};//Create packet with PID of 1, length of 7
+  uint8_t packet[PACKET_LENGTH] = {1, 0, 0, 0, 0,3,NODE_ID};//Create packet with PID of 1, length of 7
   //we will fill in time later as this isn't a huge priority
  // packet[5] = car.getDirection(); //not sure why this line isn't working
-  packet[6] = NODE_ID;
+  //packet[6] = NODE_ID;
 
   manager.sendtoWait((uint8_t *)packet, PACKET_LENGTH,SERVER_ID);
 }

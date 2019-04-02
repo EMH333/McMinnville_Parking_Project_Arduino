@@ -1,6 +1,6 @@
 #include "UltrasonicDetection.h"
 #include "Arduino.h"
-#include "runningAverage.h"
+//#include "runningAverage.h"
 
 #define SENSOR_ONE_PIN 14//TBD
 #define SENSOR_TWO_PIN 15//TBD
@@ -35,7 +35,7 @@ bool hasCarPassed() {
       carPassing = false;
       ppreviousDistance = previousDistance;
       previousDistance = currentDistance;
-      averageOne(currentDistance);//add current distance to average
+      //averageOne(currentDistance);//add current distance to average
     }
   }
   return false;

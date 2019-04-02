@@ -72,10 +72,14 @@ void loop() {
   uint8_t to = 0;
   uint8_t from = 0;
   if(manager.recvfromAckTimeout(buf,&len,timeout,&from, &to,NULL, NULL)){//message id and flags we don't care about at this point
-      Serial.print("got request from : 0x");
+      Serial.print("got request from node:");
       Serial.print(from, HEX);
-      Serial.print(": ");
-      Serial.println(*buf);
+      Serial.print(". Message:");
+      for(int i = 0; i < len; i++){
+        Serial.print(buf[i]);
+        Serial.print("-");
+      }
+      Serial.println();
   }
   //listen for radio
   //if car, send to pi
