@@ -13,16 +13,17 @@
 #define MIN_CHANGE 135
 #define MIN_TIME_TO_PASS 750
 #define MIN_TIME_BETWEEN_CARS 200
-#define MAX_SENSOR_ERROR 20 //the max error before we default to sensor one
+#define MAX_SENSOR_ERROR 20 //the max error before the system does math to figure out the most likely good sensor
 #define SENSOR_ERROR_DISTANCE 255
 #define SENSOR_ERROR_TOLERANCE 5 //how far around sensor error distance where we think sensor is broken
+#define FLOOR_AVERAGE_SIZE 2000
 class carFunction
 {
   private:
     int previousDistance = 0;
     bool carPassing = false;
     long carPassingTime = 0;
-    Average floorAverage = Average(1500);
+    Average floorAverage = Average(FLOOR_AVERAGE_SIZE);
     Average past = Average(4);
 
     int bestDirectionGuess = -1;
@@ -33,7 +34,7 @@ class carFunction
     int sTwoMin = INT16_MAX;
     int sOneMinTime = 0;
     int sTwoMinTime = 0;
-
+    Average sTwoDirectionOffset = Average(FLOOR_AVERAGE_SIZE);
   public:
     bool hasCarPassed(int dOne, int dTwo, int currentTime);
     int getDirection(int time, int error); //gets direction of most recent car, with the specified time and acceptable error
@@ -42,6 +43,7 @@ class carFunction
 bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
 {
     int currentDistance;
+    //This portion of the code finds the distance to use when tracking the cars
     if (abs(dOne - dTwo) < MAX_SENSOR_ERROR)
     {
         currentDistance = (dOne + dTwo) / 2; //if close use current distance as an average
@@ -73,7 +75,7 @@ bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
         }
     }
 
-    updateDirection(dOne, dTwo, currentTime);
+    updateDirection(dOne, dTwo, currentTime);//update the direction guess
 
     past.addData(currentDistance);
     //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage()
@@ -81,6 +83,13 @@ bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
     if (carPassingTime == 0)
     {
         floorAverage.addData(currentDistance);
+    }
+
+
+    //if the current readings are below the current floor average, weight the floor down a bit more
+    if(past.getAverage() > floorAverage.getAverage()){
+        int av = past.getAverage();
+        floorAverage.addData(av);
     }
 
     //test if there has been a significant change, that might signify a car
@@ -120,9 +129,14 @@ void carFunction::updateDirection(int dOne, int dTwo, int currentTime)
     //there are a few ways to do this
     //1. which sensor got low first//in
     //2. which sensor got high first//out
+    //x^(2/3) provides the correct number for a significant change
+    //if s2 is higher in the beginning and lower at the end, d1
 
-    //x^(2/3)
+    //overcomes sensor measurement offset when using same surface
+    sTwoDirectionOffset.addData(dOne - dTwo);
+    dTwo += sTwoDirectionOffset.getAverage();
 
+    //the abs and pow in the if statments is checking if there has been significant change and updating accordingly
     if (abs(dOne - sOneMin) > pow(dOne, 2.0 / 3))
     {
         sOneMin = dOne;

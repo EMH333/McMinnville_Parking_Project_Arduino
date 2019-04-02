@@ -13,11 +13,11 @@ int main(int, char **)
 
     //good and verified tests
     test("testFiles/Mon/one-2.txt");
-    test("testFiles/Mon/two-2.txt");
+    test("testFiles/Mon/two-2.txt");//This test seems to be a little low. Perhaps might throw out
     test("testFiles/Mon/one_good.txt");
 
     //ify tests
-    test("testFiles/Thur/two-1-d2.txt");
+    test("testFiles/Thur/two-1-d2.txt");//This test is good only if the system relyes on the higher values consistantly, which it currently does not do
     test("testFiles/Thur/two-2-d1-good.txt");
 }
 
