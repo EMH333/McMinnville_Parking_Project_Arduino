@@ -1,0 +1,3 @@
+{
+    "command": "cd \"/home/ethohampton/Documents/dev/Projects_4/McMinnville_Parking_Project_Arduino/SensorDetectionTesting/\" && clear && g++ main.cpp -o main && \"/home/ethohampton/Documents/dev/Projects_4/McMinnville_Parking_Project_Arduino/SensorDetectionTesting/\"main"
+}
