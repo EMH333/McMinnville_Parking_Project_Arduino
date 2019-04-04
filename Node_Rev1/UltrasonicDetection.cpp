@@ -42,7 +42,7 @@ bool hasCarPassed() {
 }
 
 CarInformation getCarInformation() {
-  return CarInformation(1, 142L); //temp example
+  return CarInformation(millis()%3, 142L); //temp example
 }
 
 

@@ -15,5 +15,6 @@ void setup()
 void loop()
 {
    sendCarData(getCarInformation());
+   sendCarData(getCarInformation());
    delay(1000);
 }

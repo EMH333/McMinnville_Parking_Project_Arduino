@@ -2,15 +2,16 @@
 #include <RH_RF95.h>
 #include <RHReliableDatagram.h>
 
-
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
 
 // Must match RX's freq!
 #define RF95_FREQ 915.0
-
 #define SERVER_ID 1
+
+uint8_t toTransmit[25][6];//The data left to be transmited to the raspi, in the form of [x][0] = direction, [x][1] = node ID/location, [x][2-5] = time if needed
+int carsToTransmit = 0;
 
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -59,19 +60,15 @@ void initRadios(){
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
 
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
-
-  // The default transmitter power is 13dBm, using PA_BOOST.
-  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then
-  // you can set transmitter powers from 5 to 23 dBm:
   rf95.setTxPower(23, false);
 }
 void loop() {
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
-  uint16_t timeout = 2000;//will change
+  uint16_t timeout = 1000;//will change
   uint8_t to = 0;
   uint8_t from = 0;
-  if(manager.recvfromAckTimeout(buf,&len,timeout,&from, &to,NULL, NULL)){//message id and flags we don't care about at this point
+  while(manager.recvfromAckTimeout(buf,&len,timeout,&from, &to,NULL, NULL)){//message id and flags we don't care about at this point
       Serial.print("got request from node:");
       Serial.print(from, HEX);
       Serial.print(". Message:");
@@ -80,8 +77,32 @@ void loop() {
         Serial.print("-");
       }
       Serial.println();
+
+      //car packet id to be treated accordingly
+      if(buf[0]==1){
+        toTransmit[carsToTransmit][0] = buf[5];//direction
+        toTransmit[carsToTransmit][1] = buf[6];//nodeID/location
+
+        //time
+        toTransmit[carsToTransmit][2] = buf[1];
+        toTransmit[carsToTransmit][3] = buf[2];
+        toTransmit[carsToTransmit][4] = buf[3];
+        toTransmit[carsToTransmit][5] = buf[4];
+        
+        carsToTransmit++;
+      }
   }
-  //listen for radio
-  //if car, send to pi
-  //send to pi
+
+
+  while(carsToTransmit > 0){
+    //TODO transmit to raspi
+    carsToTransmit--;
+    Serial.print("sending data to ras pi:");
+      for(int i = 0; i < 6; i++){
+        Serial.print(toTransmit[carsToTransmit][i]);
+        Serial.print("-");
+      }
+      Serial.println();
+  }
+
 }
