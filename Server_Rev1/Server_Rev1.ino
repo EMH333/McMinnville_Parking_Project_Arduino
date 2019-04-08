@@ -21,14 +21,12 @@ void setup() {
   initRadios();
   //confirm rasp pi up
 }
-void initRadios(){
-   pinMode(RFM95_RST, OUTPUT);
+void initRadios() {
+  pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
 
   Serial.begin(9600);
-  while (!Serial) {
-    delay(1);
-  }
+  Serial1.begin(9600);//start serial to ras pi
 
   delay(100);
 
@@ -62,47 +60,54 @@ void initRadios(){
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
   rf95.setTxPower(23, false);
 }
+
+
 void loop() {
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
   uint16_t timeout = 1000;//will change
   uint8_t to = 0;
   uint8_t from = 0;
-  while(manager.recvfromAckTimeout(buf,&len,timeout,&from, &to,NULL, NULL)){//message id and flags we don't care about at this point
-      Serial.print("got request from node:");
-      Serial.print(from, HEX);
-      Serial.print(". Message:");
-      for(int i = 0; i < len; i++){
-        Serial.print(buf[i]);
-        Serial.print("-");
-      }
-      Serial.println();
+  while (manager.recvfromAckTimeout(buf, &len, timeout, &from, &to, NULL, NULL)) { //message id and flags we don't care about at this point
+    Serial.print("got request from node:");
+    Serial.print(from, HEX);
+    Serial.print(". Message:");
+    for (int i = 0; i < len; i++) {
+      Serial.print(buf[i]);
+      Serial.print("-");
+    }
+    Serial.println();
 
-      //car packet id to be treated accordingly
-      if(buf[0]==1){
-        toTransmit[carsToTransmit][0] = buf[5];//direction
-        toTransmit[carsToTransmit][1] = buf[6];//nodeID/location
+    //car packet id to be treated accordingly
+    if (buf[0] == 1) {
+      toTransmit[carsToTransmit][0] = buf[5];//direction
+      toTransmit[carsToTransmit][1] = buf[6];//nodeID/location
 
-        //time
-        toTransmit[carsToTransmit][2] = buf[1];
-        toTransmit[carsToTransmit][3] = buf[2];
-        toTransmit[carsToTransmit][4] = buf[3];
-        toTransmit[carsToTransmit][5] = buf[4];
-        
-        carsToTransmit++;
-      }
+      //time
+      toTransmit[carsToTransmit][2] = buf[1];
+      toTransmit[carsToTransmit][3] = buf[2];
+      toTransmit[carsToTransmit][4] = buf[3];
+      toTransmit[carsToTransmit][5] = buf[4];
+
+      carsToTransmit++;
+    }
   }
 
 
-  while(carsToTransmit > 0){
-    //TODO transmit to raspi
-    carsToTransmit--;
-    Serial.print("sending data to ras pi:");
-      for(int i = 0; i < 6; i++){
-        Serial.print(toTransmit[carsToTransmit][i]);
-        Serial.print("-");
-      }
-      Serial.println();
+  while (carsToTransmit > 0) {    
+    Serial1.println("DATA");//DATA to ras
+
+    //expect OK from ras, this function has a 1 second timeout 
+    char[4] buf;
+    if(Serial1.readBytes(&buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K'){
+        carsToTransmit--;
+        buf = null;
+        //trasmit data with - inbetween to ras
+        for (int i = 0; i < 6; i++) {
+          Serial.print(toTransmit[carsToTransmit][i]);
+          Serial.print("-");
+        }
+    }
   }
 
 }
