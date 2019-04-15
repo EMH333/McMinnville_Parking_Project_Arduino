@@ -94,19 +94,23 @@ void loop() {
   }
 
 
-  while (carsToTransmit > 0) {    
+  int retries = 0;
+  //if cars to transmit and we havn't tried too many times, then send cars
+  while (carsToTransmit > 0 && retries < 4) {    
     Serial1.println("DATA");//DATA to ras
 
     //expect OK from ras, this function has a 1 second timeout 
-    char[4] buf;
-    if(Serial1.readBytes(&buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K'){
+    uint8_t buf[4];
+    if(Serial1.readBytes(buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K'){
         carsToTransmit--;
-        buf = null;
+        buf[0] = 'z';//insure buffer is clear of commands
         //trasmit data with - inbetween to ras
         for (int i = 0; i < 6; i++) {
           Serial.print(toTransmit[carsToTransmit][i]);
           Serial.print("-");
         }
+    }else{
+      retries++;
     }
   }
 
