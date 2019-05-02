@@ -14,7 +14,8 @@ void setup()
 
 void loop()
 {
-   sendCarData(getCarInformation());
-   sendCarData(getCarInformation());
-   delay(1000);
+  if(hasCarPassed(readDistanceOne(),readDistanceTwo(),millis())){
+    Serial.println("CAR PASSED");
+    sendCarData(getCarInformation());
+  }
 }

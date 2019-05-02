@@ -14,14 +14,16 @@ class CarInformation {
 };
 
 //Returns true if a car has passed, this should trigger the run of additional logic once car is detected
-bool hasCarPassed();
+bool hasCarPassed(int dOne, int dTwo, int currentTime);
 
 //Returns information of car at last event
 CarInformation getCarInformation();
 
 void initUltrasoic();
 
-
+void updateDirection(int dOne, int dTwo, int currentTime);//TEMP
+void resetDirection();//TEMP
+int getDirection(int askTime, int error);//TEMP
 unsigned int readDistanceOne();//TEMP for TESTING
 unsigned int readDistanceTwo();
 #endif
