@@ -19,6 +19,14 @@ int main(int, char **)
     //ify tests
     test("testFiles/Thur/two-1-d2.txt");//This test is good only if the system relyes on the higher values consistantly, which it currently does not do
     test("testFiles/Thur/two-2-d1-good.txt");
+
+    test("testFiles/mon-bef/test1-1c.txt");//one sensor goes wack after car goes through
+    test("testFiles/mon-bef/test2-s2ts1.txt");//all over the placeS
+    test("testFiles/mon-bef/test3-s1ts2-good.txt");
+    test("testFiles/mon-bef/test4-s2ts1.txt");
+    test("testFiles/mon-bef/test5-s1ts2.txt");
+    test("testFiles/mon-bef/test6-s2ts1.txt");
+    test("testFiles/mon-bef/test7-s1ts2.txt");
 }
 
 //just use datafile to test
