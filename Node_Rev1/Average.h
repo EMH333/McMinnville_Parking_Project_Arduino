@@ -1,6 +1,5 @@
 #ifndef AVERAGE
 #define AVERAGE
-#include <vector>
 
 class Average{
 public:
@@ -8,7 +7,7 @@ public:
     void addData(int input);
     int getAverage();
 private:
-    std::vector<int> data;
+    int data[2000];//this is a little big but I don't want to take the time to optimize it
     int numReadings = 0;
     int readIndex = 0;              // the index of the current reading
     int total = 0;                  // the running total
@@ -17,4 +16,3 @@ private:
 };
 
 #endif
-

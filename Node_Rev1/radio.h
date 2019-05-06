@@ -7,5 +7,5 @@
 void initRadios();
 void oldLoop();
 bool sendCarData(CarInformation car);
-void sendRawData(uint8_t one, uint8_t two);//just for test
+void sendHeartbeat(uint8_t one, uint8_t two);//just for test
 #endif

@@ -1,9 +1,9 @@
 #include "Average.h"
 
-Average::Average(int size)
+Average::Average(int s)
 {
-  numReadings = size;
-  data.resize(numReadings);
+  numReadings = s;
+  //data = Vector(numReadings);
   for (int i = 0; i < numReadings; i++)
   {
     data[i] = 0;

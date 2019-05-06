@@ -1,12 +1,5 @@
 #include "UltrasonicDetection.h"
 #include "Arduino.h"
-#undef max
-#undef min
-namespace std {
-  void __throw_length_error(char const*) {
-  }
-}
-#include <cmath>
 #include "Average.h"
 
 
@@ -113,8 +106,6 @@ bool hasCarPassed(int dOne, int dTwo, int currentTime)
     updateDirection(dOne, dTwo, currentTime);//update the direction guess
 
     past.addData(currentDistance);
-    //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage()
-    //<< ", difference: " << floorAverage.getAverage() - past.getAverage() << std::endl;
     if (carPassingTime == 0)
     {
         floorAverage.addData(currentDistance);
@@ -133,11 +124,6 @@ bool hasCarPassed(int dOne, int dTwo, int currentTime)
     //if detecting a car, a car not currently passing and there has been enough time between cars, then trigger
     if (passedCurrently && !carPassing && currentTime > carPassingTime + MIN_TIME_BETWEEN_CARS)
     {
-        //std::cout << "Current Time: " << currentTime << ", floor: " << floorAverage.getAverage()
-        //         << ", past average: " << past.getAverage()
-        //          << ", difference: " << floorAverage.getAverage() - past.getAverage()
-        //          << ", direction: " << getDirection(currentTime, 100) << std::endl;
-
         carPassing = true;
         carPassingTime = currentTime;
         return true;
