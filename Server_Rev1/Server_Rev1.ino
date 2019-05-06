@@ -16,11 +16,6 @@ int carsToTransmit = 0;
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 RHReliableDatagram manager(rf95, SERVER_ID);
-void setup() {
-  // put your setup code here, to run once:
-  initRadios();
-  //confirm rasp pi up
-}
 void initRadios() {
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -49,7 +44,7 @@ void initRadios() {
   }
 
   Serial.println("LoRa radio init OK!");
-  
+
   if (!rf95.setFrequency(RF95_FREQ)) {
     Serial.println("setFrequency failed");
     while (1);
@@ -60,7 +55,11 @@ void initRadios() {
   rf95.setTxPower(23, false);
 }
 
-
+void setup() {
+  // put your setup code here, to run once:
+  initRadios();
+  //confirm rasp pi up
+}
 void loop() {
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
@@ -89,7 +88,7 @@ void loop() {
       toTransmit[carsToTransmit][5] = buf[4];
 
       carsToTransmit++;
-    }else if (buf[0] == 3){//Heartbeat
+    } else if (buf[0] == 3) { //Heartbeat
       Serial.print(from);
       Serial.print(",");
       Serial.print(buf[1]);
@@ -103,22 +102,28 @@ void loop() {
 
   int retries = 0;
   //if cars to transmit and we havn't tried too many times, then send cars
-  while (carsToTransmit > 0 && retries < 4) {    
+  while (carsToTransmit > 0 && retries < 4) {
     Serial1.println("DATA");//DATA to ras
 
-    //expect OK from ras, this function has a 1 second timeout 
+    //expect OK from ras, this function has a 1 second timeout
     uint8_t buf[4];
-    if(Serial1.readBytes(buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K'){
-        carsToTransmit--;
-        buf[0] = 'z';//insure buffer is clear of commands
-        //trasmit data with - inbetween to ras
-        for (int i = 0; i < 6; i++) {
-          Serial.print(toTransmit[carsToTransmit][i]);
-          Serial.print("-");
-        }
-    }else{
+    if (Serial1.readBytes(buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K') {
+      carsToTransmit--;
+      buf[0] = 'z';//insure buffer is clear of commands
+      //trasmit data with - inbetween to ras
+      for (int i = 0; i < 6; i++) {
+        Serial.print(toTransmit[carsToTransmit][i]);
+        Serial.print("-");
+      }
+    } else {
       retries++;
     }
   }
 
+  //make sure we can communicate via serial
+  if (!Serial || !Serial1) {
+    Serial.begin(9600);
+    Serial1.begin(9600);
+    Serial.println("Started serial");
+  }
 }
