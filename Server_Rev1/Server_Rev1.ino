@@ -55,12 +55,16 @@ void initRadios() {
   rf95.setTxPower(23, false);
 }
 
+int inPin = 19;
 void setup() {
   // put your setup code here, to run once:
   initRadios();
+  pinMode(13,OUTPUT);
+  pinMode(inPin, INPUT);
   //confirm rasp pi up
 }
 void loop() {
+  digitalWrite(13, LOW);
   uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
   uint16_t timeout = 1000;//will change
@@ -103,27 +107,34 @@ void loop() {
   int retries = 0;
   //if cars to transmit and we havn't tried too many times, then send cars
   while (carsToTransmit > 0 && retries < 4) {
-    Serial1.println("DATA");//DATA to ras
+    digitalWrite(13, HIGH);
 
+    while(digitalRead(inPin) == HIGH);//wait for raspberry pi to be ready (go to low)
+    Serial1.print("DATA.");//DATA to ras
+    delay(50);//let the pi catch up
     //expect OK from ras, this function has a 1 second timeout
-    uint8_t buf[4];
-    if (Serial1.readBytes(buf, 2) == 2 && buf[0] == 'O' && buf[1] == 'K') {
+    if (digitalRead(inPin)==HIGH) {
       carsToTransmit--;
-      buf[0] = 'z';//insure buffer is clear of commands
       //trasmit data with - inbetween to ras
       for (int i = 0; i < 6; i++) {
-        Serial.print(toTransmit[carsToTransmit][i]);
-        Serial.print("-");
+        Serial1.print(toTransmit[carsToTransmit][i]);
+        Serial1.print("-");
       }
+      Serial1.print(".");
+      
+      Serial.println("Transmiting to pi");
     } else {
       retries++;
+      Serial.println("pi pin wasn't high");
     }
   }
 
+/*
   //make sure we can communicate via serial
   if (!Serial || !Serial1) {
     Serial.begin(9600);
     Serial1.begin(9600);
     Serial.println("Started serial");
   }
+  */
 }
