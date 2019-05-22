@@ -49,19 +49,27 @@ CarInformation getCarInformation() {
 #define MAX_CHANGE 250
 #define MIN_CHANGE 135
 #define MIN_TIME_TO_PASS 750
-#define MIN_TIME_BETWEEN_CARS 200
+#define MIN_TIME_BETWEEN_CARS 250
 #define MAX_SENSOR_ERROR 20 //the max error before the system does math to figure out the most likely good sensor
 #define SENSOR_ERROR_DISTANCE 255
 #define SENSOR_ERROR_TOLERANCE 5 //how far around sensor error distance where we think sensor is broken
 #define FLOOR_AVERAGE_SIZE 2000
+#define FLOOR_MIN 200// the floor has to be greater than 2m away
+#define HAS_HIT_FLOOR_THRESHOLD 30 //counts as floor if within 30cm
 int previousDistance = 0;
 bool carPassing = false;
-long carPassingTime = 0;
 Average floorAverage = Average(FLOOR_AVERAGE_SIZE);
 Average past = Average(4);
+/*updates if the current value has matched the floor value since a car has driven through
+this prevents one slow car from being counted again and again*/
+bool hasHitFloor = true;
+long carPassingTime = 0;
+bool hasCarPassingTimeElapsed(int currentTime);//true if the minimum passing time has elapsed
 
 int bestDirectionGuess = -1;
 int bestDirectionTime = 0;
+void updateDirection(int dOne, int dTwo, int currentTime);
+void resetDirection(); //called when the system knows a car is not passing to reset for next car
 int sOneMin = INT16_MAX;
 int sTwoMin = INT16_MAX;
 int sOneMinTime = 0;
@@ -106,41 +114,64 @@ bool hasCarPassed(int dOne, int dTwo, int currentTime)
     updateDirection(dOne, dTwo, currentTime);//update the direction guess
 
     past.addData(currentDistance);
+    //std::cout << "Past: " << past.getAverage() << ", floor: " << floorAverage.getAverage()
+    //<< ", difference: " << floorAverage.getAverage() - past.getAverage() 
+    //<< ", hitFloor: " << hasHitFloor
+    //<< std::endl;
     if (carPassingTime == 0)
     {
-        floorAverage.addData(currentDistance);
+        floorAverage.addData(past.getAverage());//add the past in so it should be a little more accurate
     }
 
 
     //if the current readings are below the current floor average, weight the floor down a bit more
     if(past.getAverage() > floorAverage.getAverage()){
         int av = past.getAverage();
-        floorAverage.addData(av);
+        floorAverage.addData(av+10);
+        floorAverage.addData(av+10);
+    }
+
+    //update if sensors have seen the floor 
+    //(runs only once after each car so we also assume this is the end of the car passing and update accordingly)
+    if(!hasHitFloor && hasCarPassingTimeElapsed(currentTime)
+         && abs(past.getAverage() - floorAverage.getAverage()) < HAS_HIT_FLOOR_THRESHOLD){
+        hasHitFloor = true;
+        carPassingTime = currentTime;//this is also the end of the car passing
+    }else if(!hasCarPassingTimeElapsed(currentTime)//else if the time hasn't elapsed and we exceed the threshold, we haven't hit the floor yet
+        && abs(past.getAverage() - floorAverage.getAverage()) > HAS_HIT_FLOOR_THRESHOLD){
+        hasHitFloor = false;
+    }
+
+    //if no car is passing, update distances and go back to monitoring floor
+    if (hasCarPassingTimeElapsed(currentTime))
+    {
+        if (carPassing)
+        { //if currently car passing, we know this is the first time after a car has passed this part has run
+            resetDirection();
+        }
+        carPassing = false;
+        previousDistance = currentDistance;
+        if(past.getAverage() > FLOOR_MIN){
+        floorAverage.addData(currentDistance); //add current distance to average only if a 'legit' floor value
+        }
     }
 
     //test if there has been a significant change, that might signify a car
     bool passedCurrently = floorAverage.getAverage() - past.getAverage() >= MIN_CHANGE;
 
-    //if detecting a car, a car not currently passing and there has been enough time between cars, then trigger
-    if (passedCurrently && !carPassing && currentTime > carPassingTime + MIN_TIME_BETWEEN_CARS)
+    // if detecting a car, a car not currently passing, there has been enough time between cars, 
+    //and the sensors have seen the floor then trigger
+    if (passedCurrently && !carPassing && hasCarPassingTimeElapsed(currentTime) && hasHitFloor)
     {
+        //std::cout << "Current Time: " << currentTime << ", floor: " << floorAverage.getAverage()
+        //          << ", past average: " << past.getAverage()
+        //          << ", difference: " << floorAverage.getAverage() - past.getAverage()
+        //          << ", direction: " << getDirection(currentTime, 100) << std::endl;
+
+        hasHitFloor = false;
         carPassing = true;
         carPassingTime = currentTime;
         return true;
-    }
-    else
-    {
-        //if data has setled and no car is passing, update distances and go back to monitoring floor
-        if (carPassingTime + MIN_TIME_TO_PASS < currentTime)
-        {
-            if (carPassing)
-            { //if currently car passing, we know this is the first time after a car has passed this part has run
-                resetDirection();
-            }
-            carPassing = false;
-            previousDistance = currentDistance;
-            floorAverage.addData(currentDistance); //add current distance to average
-        }
     }
     return false;
 }
@@ -205,4 +236,8 @@ int getDirection(int askTime, int error)
     {
         return -1;
     }
+}
+
+bool hasCarPassingTimeElapsed(int currentTime){
+    return carPassingTime + MIN_TIME_TO_PASS < currentTime;
 }
