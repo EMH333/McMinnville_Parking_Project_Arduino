@@ -13,6 +13,7 @@
 #define MIN_CHANGE 135
 #define MIN_TIME_TO_PASS 750
 #define MIN_TIME_BETWEEN_CARS 250
+#define MIN_TIME_BETWEEN_READINGS 30
 #define MAX_SENSOR_ERROR 20 //the max error before the system does math to figure out the most likely good sensor
 #define SENSOR_ERROR_DISTANCE 255
 #define SENSOR_ERROR_TOLERANCE 5 //how far around sensor error distance where we think sensor is broken
@@ -23,13 +24,14 @@ class carFunction
 {
   private:
     int previousDistance = 0;
+    unsigned long previousTime = 0;
     bool carPassing = false;
     Average floorAverage = Average(FLOOR_AVERAGE_SIZE);
     Average past = Average(4);
     /*updates if the current value has matched the floor value since a car has driven through
     this prevents one slow car from being counted again and again*/
     bool hasHitFloor = true;
-    long carPassingTime = 0;
+    unsigned long carPassingTime = 0;
     bool hasCarPassingTimeElapsed(int currentTime);//true if the minimum passing time has elapsed
 
     int bestDirectionGuess = -1;
@@ -42,12 +44,18 @@ class carFunction
     int sTwoMinTime = 0;
     Average sTwoDirectionOffset = Average(FLOOR_AVERAGE_SIZE);
   public:
-    bool hasCarPassed(int dOne, int dTwo, int currentTime);
-    int getDirection(int time, int error); //gets direction of most recent car, with the specified time and acceptable error
+    bool hasCarPassed(int dOne, int dTwo, unsigned long currentTime);
+    int getDirection(unsigned long time, int error); //gets direction of most recent car, with the specified time and acceptable error
 };
 
-bool carFunction::hasCarPassed(int dOne, int dTwo, int currentTime)
+bool carFunction::hasCarPassed(int dOne, int dTwo, unsigned long currentTime)
 {
+    long timeDiff = currentTime - previousTime;
+    if(abs(timeDiff) < MIN_TIME_BETWEEN_READINGS){
+        return carPassing;
+    }
+    previousTime = currentTime;
+
     int currentDistance;
     //This portion of the code finds the distance to use when tracking the cars
     if (abs(dOne - dTwo) < MAX_SENSOR_ERROR)
@@ -195,7 +203,7 @@ void carFunction::resetDirection()
     int sTwoMinTime = 0;
 }
 
-int carFunction::getDirection(int askTime, int error)
+int carFunction::getDirection(unsigned long askTime, int error)
 {
     //perhaps use the average guess of the last say 5 or 10 readings
     if (askTime - error < bestDirectionTime && bestDirectionGuess != -1)
