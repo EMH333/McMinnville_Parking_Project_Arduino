@@ -20,7 +20,7 @@ void loop()
     sendCarData(getCarInformation());
   }
 
-  if(millis() > previousHeartbeat + HEARTBEAT_INTERVAL){
+  if(abs(millis() - previousHeartbeat) > HEARTBEAT_INTERVAL){
     sendHeartbeat(readDistanceOne(), readDistanceTwo());
     previousHeartbeat = millis();
   }
