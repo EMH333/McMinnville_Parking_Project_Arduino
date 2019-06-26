@@ -19,9 +19,13 @@ int main(int, char **)
     test("testFiles/mon-bef/test4-s2ts1.txt");
     test("testFiles/mon-bef/test6-s2ts1.txt");
 
+    test("testFiles/alone/alone-test1.txt");
+    test("testFiles/alone/alone-test2.txt");
+    test("testFiles/alone/alone-test3.txt");
+
     //ify tests
     //test("testFiles/Thur/two-1-d2.txt");//This test is good only if the system relyes on the higher values consistantly, which it currently does not do
-    //test("testFiles/Thur/two-2-d1-good.txt");
+    test("testFiles/Thur/two-2-d1-good.txt");
     //test("testFiles/Mon/two-2.txt");//This test seems to be a little low. Perhaps might throw out
 
     //to sort
